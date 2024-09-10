@@ -6,13 +6,18 @@
 #    By: lgasc <marvin@42.fr>                       +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/05/08 18:19:19 by lgasc             #+#    #+#              #
-#    Updated: 2024/07/30 15:29:31 by lgasc            ###   ########.fr        #
+#    Updated: 2024/09/10 18:57:16 by lgasc            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME			= PhoneBook
 
-SOURCES			= $(NAME).cpp
+CLASSES			= $(NAME) Command s_contact
+
+SOURCES			= $(addsuffix .cpp, $(CLASSES))
+
+#Contact.hpp
+HEADERS			= $(addsuffix .hpp, $(CLASSES))
 
 #LDLIBS			+= -lreadline
 
@@ -24,37 +29,53 @@ SOURCES			= $(NAME).cpp
 OBJECTS			= $(SOURCES:.cpp=.o) $(LIB_ARCHIVES)
 
 
-CFLAGS			+= -Wall -Wmissing-noreturn -Werror		\
-	-Wnull-dereference -Wstrict-overflow=5 -Wpedantic	\
-	-Wattributes -Wmissing-format-attribute -Wnonnull	\
-	-Wextra #-Wsuggest-attribute=returns_nonnull
+# https://stackoverflow.com/a/56290397/22306298
+CCFLAGS			+= -Wall -Wstrict-overflow=5	\
+	-Wextra -Wmissing-format-attribute -g	\
+	-Wnull-dereference -Wattributes -Werror		\
+	-Wpedantic -Wnonnull -Wmissing-noreturn #-fPIE
+
+GCCFLAGS		+= -Wduplicated-cond -Wattribute-alias=2	\
+	-Wsuggest-attribute=malloc -Wsuggest-attribute=pure		\
+	-Wsuggest-attribute=const -Wsuggest-attribute=cold		\
+	-Wsuggest-attribute=noreturn -Wduplicated-branches		\
+	-Wsuggest-attribute=format -Wstringop-overflow=4
+
+CLANGFLAGS		+= -Wproperty-attribute-mismatch
+
+
+CFLAGS			+= -Wsuggest-attribute=returns_nonnull $(CCFLAGS)
 
 ifeq ($(CC), gcc)
-CFLAGS			+= -Wduplicated-cond -Wsuggest-attribute=const	\
-	-Wsuggest-attribute=cold -Wsuggest-attribute=pure	\
-	-Wduplicated-branches -Wsuggest-attribute=format	\
-	-Wattribute-alias=2 -Wsuggest-attribute=noreturn	\
-	-Wsuggest-attribute=malloc -Wstringop-overflow=4
+CFLAGS			+= $(GCCFLAGS)
 
 else ifeq ($(CC), clang)
-CFLAGS			+= -Wproperty-attribute-mismatch
+CFLAGS			+= $(CLANGFLAGS)
 endif
 
-CXXFLAGS		+= -std=c++98 $(CFLAGS)
+
+CXXFLAGS		+= -std=c++98 $(CCFLAGS)
+
+ifeq ($(CXX), g++)
+CXXFLAGS		+= $(GCCFLAGS)
+
+else ifeq ($(CXX), clang++)
+CXXFLAGS		+= $(CLANGFLAGS)
+endif
 
 RESET			= \033[0m
 #BOLD			= \033[1m
-FAINT			= \033[2m
+#FAINT			= \033[2m
 #REGULAR		= \033[22m
-ITALIC			= \033[3m
-ROMAN			= \033[23m
-BLACK_FORE		= \033[30m
-OLIVE_FORE		= \033[33m
-DEFAULT_FORE	= \033[39m
-DEFAULT_BOTH	= \033[39;49m
-OLIVE_BACK		= \033[43m
-GREY_FORE		= \033[90m
-WHITE_FORE		= \033[97m
+#ITALIC			= \033[3m
+#ROMAN			= \033[23m
+#BLACK_FORE		= \033[30m
+#OLIVE_FORE		= \033[33m
+#DEFAULT_FORE	= \033[39m
+#DEFAULT_BOTH	= \033[39;49m
+#OLIVE_BACK		= \033[43m
+#GREY_FORE		= \033[90m
+#WHITE_FORE		= \033[97m
 LOW_SCRIPT		= \033[22;2;23;4m
 L_C				= $(LOW_SCRIPT)
 # Loose inspiration from a gnu head
@@ -63,17 +84,23 @@ G_C				= $(GNU_SCRIPT)
 GNU_STYLE		= \033[1;3;43;90m
 G_Y				= $(GNU_STYLE)
 
+DIRT			= 'TODO|FIXME|XXX|(?<!'\'')\?|\?(?!'\'')|! ?!|DEPREC\w*$\
+	|[Dd]eprec\w*|(?:w?c)?log|(?<![/:])/([*/])(?! |!|\1)|(?:\t|.{4}){20}.'
+
 
 
 .PHONY:	all re clean fclean	debug test
 
 all:		$(NAME)
 
-$(NAME):	$(OBJECTS)
-	$(CXX) -g $(OBJECTS) $(LDLIBS) --output $(NAME)
+$(NAME):	$(OBJECTS) $(HEADERS)
+	$(CXX) $(CXXFLAGS) $(OBJECTS) $(LDLIBS) --output $(NAME)
 	-norminette
-	-grep -P 'TODO|FIXME|XXX|(?<!'\'')\?|\?(?!'\'')|!!|DEPREC\w*|[Dd]eprec\w*' \
-		--recursive . --include=\*.[ch] --line-number --colour=auto
+	#-grep --recursive . --include=\*.[ch] --line-number --colour=auto \
+	#	-P 'TODO|FIXME|XXX|(?<!'\'')\?|\?(?!'\'')|!!|DEPREC\w*|[Dd]eprec\w*'
+	-grep -PRn $(DIRT) --include='*.[ch]' --include='*.[cht]pp'	\
+		--exclude='*.[cht]pp.[ch]' --colour=auto				;
+		#--include='$(SOURCES) $(HEADERS)'						;
 
 clean:		
 	#$(MAKE) -C $(dir $(LIBFT)) fclean
@@ -103,3 +130,8 @@ $(LIBFT):
 
 #$(SOURCES:.c=.o):	$@
 #	echo '@$@ <$< ?$? ^$^'
+
+# https://www.gnu.org/software/make/manual/make.html#Catalogue-of-Rules
+# https://www.gnu.org/software/make/manual/make.html#Suffix-Rules
+%.o: %.cpp %.hpp
+	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ $<

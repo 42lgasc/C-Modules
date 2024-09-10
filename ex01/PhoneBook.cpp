@@ -6,16 +6,19 @@
 /*   By: lgasc <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/07/29 14:11:15 by lgasc             #+#    #+#             */
-/*   Updated: 2024/08/08 17:18:47 by lgasc            ###   ########.fr       */
+/*   Updated: 2024/09/10 19:23:46 by lgasc            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <cstdlib>
-#include <iostream>
-#include <string>
-
 #include "PhoneBook.hpp"
 
+#include "Command.hpp"
+
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+
+// TODO: Bundle all of these into constants of class with operator
 #define BOLD				"\x1B[1m"
 #define REGULAR				"\x1B[22m"
 #define ITALIC				"\x1B[3m"
@@ -27,6 +30,7 @@
 #define EXVERT				"\x1B[27m"
 #define RIGHT				"\x1B[27m"
 #define RT					"\x1B[27m"
+#define MAROON				"\x1B[31m"
 #define NAVY_BACK			"\x1B[44m"
 #define PURPLE_BACKGROUND	"\x1B[45m"
 #define P_U					"\x1B[45m"
@@ -41,6 +45,8 @@
 #define MAGENTA_FOREGROUND	"\x1B[95m"
 #define M_F					"\x1B[95m"
 #define CYAN_FRONT			"\x1B[96m"
+#define ERROR				"\x1b[1;31m"
+#define OK					"\x1b[22;39m"
 #define SEARCH				"\x1B[1;44;93m"
 #define FOR_YOU				"\x1B[1;23;44;94m"
 #define STORAGE				"\x1B[1;23;45;91m"
@@ -94,85 +100,157 @@
 //grEy	Red		Lime	Yellow	Blue	Magenta	Cyan	White
 //K A G O N P T S / E R L Y B M C W
 //A B C E G K L M N O P R S T Y W
-static void		ft_intro(void);
 
-enum e_command
-{
-	Add,
-	search,
-	EXIT
-};
-
-class Command
-{
-	int x;
-int				y;
-
-enum e_command	ft_type(void);
-}
-;
-using std		:: istream;
-
-///https://stackoverflow.com/a/4421719/22306298
-std::istream&	operator>> (std::istream & is, enum e_command & command)
-{
-	using std::string;
-	string	s;
-
-	is >> s;
-	if (s == "ADD")
-		///TODO
-		command = Add, std::cerr << "adding";
-	else if (s == "SEARCH")
-		///TODO
-		command = search;
-	else if (s == "EXIT")
-		///TODO
-		command = EXIT;
-	else
-	//!TODO: Read `object` from stream
-		is.setstate(std::ios::failbit), std::cerr << "failing";
-	return (is);
-}
-
-//void	operator , (int _);
+//void	operator , (int _); // Yes you can!	disaster
 
 int	main(void)
 {
-	e_command	command;
-
-	ft_intro();
-	(std::cout) << "Commandes: `" UNDERLINE"ADD" LINELESS"`, `"
-	UNDERLINE"SEARCH" LINELESS"`, `" UNDERLINE"EXIT" LINELESS"`.\n";
-	(std::cout) << "Entrez une commande: ";
-	while (not (std::cin >> command))
-		(std::cout) << "Try again: ", std::cin.clear();
-	return (EXIT_SUCCESS);
+	return (PhoneBook ()());
 }
 
-static void	ft_intro(void)
+PhoneBook::PhoneBook	(void) : in (std::cin), out (std::cout) {
+	out << M_P" _______    " Y_F"_        " R_FG "_______                      "
+		"   " R_FG"_             \n" M_F"🭮" INV"_______" RT"🭬  " Y_F "🬳" INV " "
+		RT"🭐  " L_F"__  " R_FG"🭮" INV"_______" RT"🭬                       " R_FG
+		"🭮" INV"_" RT"🭬            \n    " M_F"_ " B_F"🭅" INV"__" RT"🭬_" Y_F "🬗"
+		INV" " RT"▓ " L_F"🭅" INV"__" RT"🭬_ " R_FG"_______ " M_F "____  " B_F "_"
+		"___  " Y_F"_   _ " L_F"_____ " R_FG"_  " M_F "____ " B_F "_____ \n" M_F
+		"   🬳" INV" " B_M"🭐" P_U" ___ " Y_B"🭎" P_U" " RT "▓" L_F "🬳" INV " ___ "
+		R_L"🭎" P_U"  ___  " M_R"🬈" P_U"  _ " RT"🭎" B_F"🬳" INV"  _ " RT"🭎" Y_F"🬳"
+		INV" " RT"🭐 🭅" INV" " L_Y"🭪" P_U"____ " R_L"🬈" P_U" " RT "🭐" M_F "🭃" INV
+		" ___" B_M"🭬" P_U" ___ " RT"🭎\n" M_F"   🬗" INV" " B_M"▓" P_U " ____" Y_B
+		"🭟" P_U" " RT"▓" L_F"🬗" INV" ____" R_L"🭟" P_U" " RT"▓   🭨" INV" " M_R"🬗"
+		P_U" " RT"▓ 🭨" INV" " B_M"🬗" P_U" " RT"▓ 🭨" INV" " Y_B"🬗" P_U" " RT"▓_🭨"
+		INV" " L_Y"🭙" P_U" ___ " R_L"🬗" P_U" " M_R"▓" P_U" " RT"▓   " B_F"🬗" INV
+		" ____" RT"🭟\n" M_F"   🭖" INV"_" B_M"🭟" P_U"_____" RT"🭬" Y_F "🭔" INV "_"
+		L_Y"🭬" P_U"_____" R_L"🭬" P_U"_" RT"🭟   🭖" INV"_" M_R"🭀" P_U "_" RT "🭟 🭖"
+		INV"_" B_M"🭀" P_U"_" RT"🭟 🭖" INV"_" Y_B"🬾" P_U "____" RT "🭡" L_F "🭔" INV
+		"_____" R_L"🭀" P_U"_" M_R"🭟" P_U"_" RT"🭟   " B_F"🭔" INV "_____" RT "🭬\n"
+		"\n                  " SUBTITLE "L'incroyable annuaire logiciel!" SIMPLE
+		"                  \n\n" SEARCH "Recherche Éclair:" REG_ITAL"        T"
+		"rouvez vos contacts en quelques secondes!\n" STORAGE "Large Stockage:"
+		REG_ITAL "                   Enregistrez jusqu'a 8" BAD "00" GOOD " co"
+		"ntacts!\n" FOR_YOU "Fait Pour Vous:" REG_ITAL "                    Na"
+		"viguez et organisez avec aise!\n" CUSTOMIZE "Fiches Personnalisables:"
+		REG_ITAL "   Ajoutez surnoms, téléphones, et secrets!" ROMAN COLORLESS
+		<< std::endl;
+}
+
+PhoneBook::~	PhoneBook(void) { out << "Arret..." << std::endl; }
+
+// Why I use `not s.good()` instead of `s.operator bool ()`:
+// 	https://en.cppreference.com/w/cpp/io/ios_base/iostate#See_also
+bool	PhoneBook::operator () (void) {
+	while (true) {
+		out << "Commandes: `" UNDERLINE << Command::ft_text(Command::Add)
+			<< LINELESS"`, `" UNDERLINE << Command::ft_text(Command::Search)
+			<< LINELESS"`, `" UNDERLINE << Command::ft_text(Command::Exit)
+			<< LINELESS"`.\n" << "Entrez une commande:\t";
+		std::string	line;
+		while (not getline(in, line) or not Command::ft_valid (line))
+			if (not in.good() or not (out << "Réessayez:\t"))
+				return (true);
+		switch (Command::ft_kind(line)) {
+			case Command::Add:
+				ft_add();
+				break ;
+			case Command::Search:
+				ft_search();
+				break ;
+			case Command::Exit:
+				return (false);
+}	}	}
+
+void	PhoneBook::ft_add(void) {
+	std::string	first_name, last_name, nickname, phone_number, darkest_secret;
+	out << INV "Ajouter un contact" RT "\n";
+	if (ft_ask_field(s_contact::s_labels::first_name, first_name) == true)
+		return ;
+	if (ft_ask_field(s_contact::s_labels::last_name, last_name) == true)
+		return ;
+	if (ft_ask_field(s_contact::s_labels::nickname, nickname) == true)
+		return ;
+	if (ft_ask_field(s_contact::s_labels::phone_number, phone_number) == true)
+		return ;
+	if (ft_ask_field(s_contact::s_labels::darkest_secret, darkest_secret)
+		== true)
+		return ;
+	ft_push(
+		s_contact(first_name, last_name, nickname, phone_number, darkest_secret)
+	);
+}
+
+// Why I use `not s.good()` instead of `s.operator bool ()`:
+// 	https://en.cppreference.com/w/cpp/io/ios_base/iostate#See_also
+bool
+PhoneBook::ft_ask_field(const std::string & label, std::string & field) const {
+	const std::string	blank = "\t\n\v\f\r ";
+
+	out << ITALIC << label << ":\t" ROMAN;
+	if (not getline(in, field).good()
+		|| field.find_first_not_of(blank) == std::string::npos)
+		return (std::cerr << ERROR "Les champs doivent ne pas être vide."
+		OK << std::endl, out << "Annulation..." << std::endl, true);
+	return (false);
+}
+
+void	PhoneBook::ft_push(const s_contact & c)
 {
-	(std::cout) << M_P" _______    " Y_F"_        " R_FG"_______               "
-	"          " R_FG"_             \n" M_F"🭮" INV"_______" RT"🭬  " Y_F"🬳" INV
-	" " RT"🭐  " L_F"__  " R_FG"🭮" INV"_______" RT"🭬                       " R_FG
-	"🭮" INV"_" RT"🭬            \n    " M_F"_ " B_F"🭅" INV"__" RT"🭬_" Y_F"🬗" INV
-	" " RT"▓ " L_F"🭅" INV"__" RT"🭬_ " R_FG"_______ " M_F"____  " B_F"____  " Y_F
-	"_   _ " L_F"_____ " R_FG"_  " M_F"____ " B_F"_____ \n" M_F"   🬳" INV" " B_M
-	"🭐" P_U" ___ " Y_B"🭎" P_U" " RT"▓" L_F"🬳" INV" ___ " R_L"🭎" P_U"  ___  " M_R
-	"🬈" P_U"  _ " RT"🭎" B_F"🬳" INV"  _ " RT"🭎" Y_F"🬳" INV" " RT"🭐 🭅" INV" " L_Y
-	"🭪" P_U"____ " R_L"🬈" P_U" " RT"🭐" M_F"🭃" INV" ___" B_M"🭬" P_U" ___ " RT"🭎"
-	"\n" M_F"   🬗" INV" " B_M"▓" P_U" ____" Y_B"🭟" P_U" " RT"▓" L_F"🬗" INV" ___"
-	"_" R_L"🭟" P_U" " RT"▓   🭨" INV" " M_R"🬗" P_U" " RT"▓ 🭨" INV" " B_M"🬗" P_U
-	" " RT"▓ 🭨" INV" " Y_B"🬗" P_U" " RT"▓_🭨" INV" " L_Y"🭙" P_U" ___ " R_L"🬗" P_U
-	" " M_R"▓" P_U" " RT"▓   " B_F"🬗" INV" ____" RT"🭟\n" M_F"   🭖" INV"_" B_M"🭟"
-	P_U "_____" RT"🭬" Y_F"🭔" INV"_" L_Y"🭬" P_U"_____" R_L"🭬" P_U"_" RT"🭟   🭖"
-	INV"_" M_R"🭀" P_U"_" RT"🭟 🭖" INV"_" B_M"🭀" P_U"_" RT"🭟 🭖" INV"_" Y_B"🬾" P_U
-	"____" RT"🭡" L_F"🭔" INV"_____" R_L"🭀" P_U"_" M_R"🭟" P_U"_" RT"🭟   " B_F"🭔"
-	INV"_____" RT"🭬\n\n                  " SUBTITLE"L'incroyable annuaire logic"
-	"iel!" SIMPLE"                  \n\n" SEARCH"Recherche Éclair:" REG_ITAL"  "
-	"      Trouvez vos contacts en quelques secondes!\n" STORAGE"Large Stockage"
-	":" REG_ITAL"                   Enregistrez jusqu'a 8" BAD"00" GOOD" contac"
-	"ts!\n" FOR_YOU"Fait Pour Vous:" REG_ITAL"                    Naviguez et o"
-	"rganisez avec aise!\n" CUSTOMIZE"Fiches Personnalisables:" REG_ITAL"   Ajo"
-	"utez surnoms, téléphones, et secrets!\n" ROMAN COLORLESS;
+	for (size_t i = capacity - 1; i > 0; -- i)
+		contacts [i] = contacts [i - 1];
+	contacts [0] = c;
+}
+
+void	PhoneBook::ft_search(void) const
+{
+	const int	column_width = 10;
+	const char	ellipsis [2] = {'.'};
+
+	out << INV "Chercher un contact" RT "\n";
+	for (size_t i = 0; i < capacity; ++i)
+	{
+		out << std::setw(column_width) << i + 1
+			<< '|' << std::setw(column_width);
+		if (contacts [i].first_name.length() > column_width)
+			out << contacts [i].first_name.substr().replace
+				(column_width - 1, std::string::npos, ellipsis);
+		else
+			out << contacts [i].first_name;
+		out << '|' << std::setw(column_width);
+		if (contacts [i]. last_name .length() > column_width)
+			out << contacts [i].last_name.substr().replace
+				(column_width - 1, std::string::npos, ellipsis);
+		else
+			out << contacts [i].last_name;
+		out << '|' << std::setw(column_width);
+		if (contacts [i].nickname.length() > column_width)
+			out << contacts [i].nickname.substr().replace
+				(column_width - 1, std::string::npos, ellipsis);
+		else
+			out << contacts [i].nickname;
+		out << '\n';
+	}
+	out << "Afficher les details du contact portant ce numéro:\t";
+	std::string	query;
+	size_t		index;
+	if (not getline(in, query).good()
+		or query.find_first_not_of("0123456789") != std::string::npos
+		or not (std::istringstream (query) >> index)
+		or index == 0 or index > capacity)
+	{
+		std::cerr << ERROR "Seul un numéro de rang est requis." OK << std::endl;
+		out << "Annulation..." << std::endl;
+		return ;
+	}
+	-- index, out << ITALIC << s_contact::s_labels::first_name << ":\t" ROMAN
+		<< contacts [index].first_name << "\n"
+		ITALIC << s_contact::s_labels::last_name << ":\t" ROMAN
+		<< contacts [index].last_name << "\n"
+		ITALIC << s_contact::s_labels::nickname << ":\t" ROMAN
+		<< contacts [index].nickname << "\n"
+		ITALIC << s_contact::s_labels::phone_number << ":\t" ROMAN
+		<< contacts [index].phone_number << "\n"
+		ITALIC << s_contact::s_labels::darkest_secret << ":\t" ROMAN
+		<< contacts [index].darkest_secret << std::endl;
+	return ;
 }
