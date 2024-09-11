@@ -6,7 +6,7 @@
 /*   By: lgasc <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/11 14:04:43 by lgasc             #+#    #+#             */
-/*   Updated: 2024/09/11 18:42:04 by lgasc            ###   ########.fr       */
+/*   Updated: 2024/09/11 18:59:02 by lgasc            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,8 +33,8 @@ void	Account::displayAccountsInfos(void) {
 
 // ## Lifetime                          ########################################
 
-Account::Account	(const int initial_deposit) : _amount (initial_deposit)
-//,_nbDeposits (0), _nbWithdrawals (0)
+Account::Account	(const int initial_deposit)
+: _amount (initial_deposit), _nbDeposits (0), _nbWithdrawals (0)
 {
 	static int	new_index = 0;
 
